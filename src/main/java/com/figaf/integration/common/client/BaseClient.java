@@ -1,8 +1,10 @@
 package com.figaf.integration.common.client;
 
 import com.figaf.integration.common.client.support.OAuthTokenInterceptor;
+import com.figaf.integration.common.client.support.UniversalIdAuthenticator;
 import com.figaf.integration.common.client.support.parser.CloudFoundryOAuthTokenParser;
 import com.figaf.integration.common.client.support.parser.SamlRequestParser;
+import com.figaf.integration.common.client.support.payload.UniversalIdAuthContext;
 import com.figaf.integration.common.entity.*;
 import com.figaf.integration.common.exception.ClientIntegrationException;
 import com.figaf.integration.common.factory.HttpClientsFactory;
@@ -795,6 +797,12 @@ public class BaseClient {
             }
             authorizeViaCustomIdpProvider(requestContext, authorizationUrl);
             redirectUrlReceivedAfterSuccessfulAuthorization = authorizationUrl;
+        } else if (requestContext.isSapUniversalId()) {
+            UniversalIdAuthContext universalIdAuthContext = new UniversalIdAuthContext();
+            universalIdAuthContext.setInitialAuthUrl(authorizationUrl);
+            universalIdAuthContext.setSignatureCookie(signature);
+            UniversalIdAuthenticator universalIdAuthenticator = new UniversalIdAuthenticator(requestContext, universalIdAuthContext);
+            redirectUrlReceivedAfterSuccessfulAuthorization = universalIdAuthenticator.authenticateAndGetRedirectLocation();
         } else if (StringUtils.isNotEmpty(requestContext.getLoginPageUrl())) {
             //if we have loginPageUrl, the next call (getAuthorizationPageContent) is needed only for receiving cookies
             getAuthorizationPageContent(requestContext, authorizationUrl);

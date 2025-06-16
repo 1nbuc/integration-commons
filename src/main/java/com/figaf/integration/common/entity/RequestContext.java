@@ -37,6 +37,7 @@ public class RequestContext {
     private String certificatePassword;
     private boolean onPremiseEdgeSystem;
     private String edgeCloudConnectorLocationId;
+    private String universalAuthAccountId;
 
     public RequestContext(
         ConnectionProperties connectionProperties,
@@ -121,6 +122,10 @@ public class RequestContext {
 
     public boolean isSapIdentityService() {
         return webApiAccessMode == WebApiAccessMode.SAP_IDENTITY_SERVICE;
+    }
+
+    public boolean isSapUniversalId() {
+        return webApiAccessMode == WebApiAccessMode.SAP_UNIVERSAL_ID;
     }
 
 }
