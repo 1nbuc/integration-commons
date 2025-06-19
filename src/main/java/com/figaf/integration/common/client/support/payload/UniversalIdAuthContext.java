@@ -47,6 +47,7 @@ public class UniversalIdAuthContext {
     private String samlResponseValue; // SAMLResponse form value
     private List<String> step19SetCookieHeaders; // Specifically store Set-Cookie headers from step 19
     private String signatureCookie;
+    private String spName;
 
     // Collected Cookies (using java.net.HttpCookie for better standard compliance)
     private final List<HttpCookie> collectedCookies = new ArrayList<>();

@@ -49,6 +49,8 @@ public class UniversalIdAuthenticator {
     public String authenticateAndGetRedirectLocation() throws UniversalIdAuthenticationException {
         authContext.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 FigafInvoker/1.0");
 
+        setDefaultValues();
+
         try {
             // Step 1 is the failing request itself that provides initial values
             step2_prepareLoginAndCookies(authContext);
@@ -86,6 +88,20 @@ public class UniversalIdAuthenticator {
             headers.set("Cookie", cookieHeader);
         }
         return headers;
+    }
+
+    private void setDefaultValues() {
+        String cloudZone = getCloudZone();
+        authContext.setSpName("uaa-cf-" + cloudZone);
+    }
+
+    // Returns something like eu10 from the CPI URL
+    private String getCloudZone() {
+        //e.g. https://f1b8e968trial.integrationsuite-trial.cfapps.ap21.hana.ondemand.com
+        String host = requestContext.getConnectionProperties().getHost();
+        String[] hostParts = host.split("\\.");
+        String cloudZone = hostParts[hostParts.length - 4];
+        return cloudZone;
     }
 
     private HttpHeaders buildHeaders(UniversalIdAuthContext authContext, URI targetUri, HttpHeaders customHeaders) {
@@ -660,14 +676,14 @@ public class UniversalIdAuthenticator {
         body.add("xsrfProtection", context.getInitialXsrfHostCookieValue());
         body.add("method", "GET");
         body.add("idpSSOEndpoint", "https://accounts.sap.com/oauth2/authorize");
-        body.add("sp", "uaa-cf-ap21");
+        body.add("sp", context.getSpName());
         body.add("RelayState", context.getSamlRelayStateValue());
 
         if (context.getInitialAuthUrl() == null) {
             throw new UniversalIdAuthenticationException("Step 12: InitialAuthUrl (for form's targetUrl) is missing.");
         }
         body.add("targetUrl", context.getInitialAuthUrl());
-        body.add("spName", "uaa-cf-ap21");
+        body.add("spName", context.getSpName());
         body.add("j_username", requestContext.getConnectionProperties().getUsername());
 
         RequestEntity<MultiValueMap<String, String>> requestEntity = new RequestEntity<>(body, buildHeaders(context, uri, customHeaders), HttpMethod.POST, uri);
@@ -761,7 +777,7 @@ public class UniversalIdAuthenticator {
 
     private void step13_gigyaSsoPost(UniversalIdAuthContext context) throws UniversalIdAuthenticationException {
         log.debug("Step 13: Gigya SSO POST");
-        if (context.getSamlActionUrl() == null || !context.getSamlActionUrl().contains("fidm.eu1.gigya.com")) {
+        if (context.getSamlActionUrl() == null || !context.getSamlActionUrl().contains("gigya.com")) {
             throw new UniversalIdAuthenticationException("Step 13: SamlActionUrl for Gigya is missing or incorrect: " + context.getSamlActionUrl());
         }
         String targetUrl = context.getSamlActionUrl();
