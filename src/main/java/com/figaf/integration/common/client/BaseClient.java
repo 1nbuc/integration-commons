@@ -7,6 +7,7 @@ import com.figaf.integration.common.client.support.parser.SamlRequestParser;
 import com.figaf.integration.common.client.support.payload.UniversalIdAuthContext;
 import com.figaf.integration.common.entity.*;
 import com.figaf.integration.common.exception.ClientIntegrationException;
+import com.figaf.integration.common.exception.UniversalIdAuthenticationException;
 import com.figaf.integration.common.factory.HttpClientsFactory;
 import com.figaf.integration.common.factory.RestTemplateWrapperFactory;
 import com.figaf.integration.common.utils.Utils;
@@ -714,6 +715,9 @@ public class BaseClient {
                 throw ex;
             }
         } catch (ClientIntegrationException ex) {
+            throw ex;
+        } catch (UniversalIdAuthenticationException ex) {
+            log.error("Error while initializing UniversalId Authentication", ex);
             throw ex;
         } catch (Exception ex) {
             String errorMessage = String.format("Can't authorize and execute initial request on %s", path);
