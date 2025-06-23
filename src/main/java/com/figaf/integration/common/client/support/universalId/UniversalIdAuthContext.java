@@ -23,8 +23,8 @@ public class UniversalIdAuthContext {
     public static final String STEP7_URL = "https://cdc-api.account.sap.com/accounts.getJWT";
     public static final String STEP8_URL_FORMAT = "https://core-api.account.sap.com/uid-core/accounts/%s/selectedAccount";
     public static final String STEP9_URL = "https://core-api.account.sap.com/uid-core/refreshCDCLoginToken";
-    public static final String STEP10_URL_FORMAT = "https://account.sap.com/core/SAMLProxyPage.html%3FapiKey%3D%s";
-    public static final String STEP11_URL_FORMAT = "https://account.sap.com/core/SAMLProxyPage.html%3FapiKey%3D%s";
+    public static final String STEP10_URL_FORMAT = "https://account.sap.com/core/SAMLProxyPage.html%%3FapiKey%%3D%s";
+    public static final String STEP11_URL_FORMAT = "https://account.sap.com/core/SAMLProxyPage.html%%3FapiKey%%3D%s";
     public static final String STEP12_URL = "https://accounts.sap.com/oauth2/authorize";
     public static final String STEP14_URL_FORMAT = "https://cdc-api.account.sap.com/saml/v2.0/%s/idp/sso/continue";
     public static final String STEP15_URL_FORMAT = "https://cdc-api.account.sap.com/js/gigya.js?apiKey=%s";
