@@ -1,10 +1,8 @@
-package com.figaf.integration.common.client.support.payload;
+package com.figaf.integration.common.client.support.universalId;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.apache.hc.client5.http.cookie.Cookie;
-import org.apache.hc.core5.http.Header;
 
 import java.net.HttpCookie;
 import java.net.URI;
@@ -18,6 +16,18 @@ import java.util.stream.Collectors;
 @Setter
 @ToString
 public class UniversalIdAuthContext {
+
+    // Constant URLs. The other step extract their URLs from 301 redirect location headers
+    public static final String STEP5_URL = "https://core-api.account.sap.com/uid-core/authenticate";
+    public static final String STEP6_URL = "https://cdc-api.account.sap.com/accounts.getAccountInfo";
+    public static final String STEP7_URL = "https://cdc-api.account.sap.com/accounts.getJWT";
+    public static final String STEP8_URL_FORMAT = "https://core-api.account.sap.com/uid-core/accounts/%s/selectedAccount";
+    public static final String STEP9_URL = "https://core-api.account.sap.com/uid-core/refreshCDCLoginToken";
+    public static final String STEP10_URL_FORMAT = "https://account.sap.com/core/SAMLProxyPage.html%3FapiKey%3D%s";
+    public static final String STEP11_URL_FORMAT = "https://account.sap.com/core/SAMLProxyPage.html%3FapiKey%3D%s";
+    public static final String STEP12_URL = "https://accounts.sap.com/oauth2/authorize";
+    public static final String STEP14_URL_FORMAT = "https://cdc-api.account.sap.com/saml/v2.0/%s/idp/sso/continue";
+    public static final String STEP15_URL_FORMAT = "https://cdc-api.account.sap.com/js/gigya.js?apiKey=%s";
 
     // URLs and Redirects
     private String initialAuthUrl;

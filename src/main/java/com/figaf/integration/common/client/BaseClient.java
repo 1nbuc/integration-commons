@@ -1,10 +1,10 @@
 package com.figaf.integration.common.client;
 
 import com.figaf.integration.common.client.support.OAuthTokenInterceptor;
-import com.figaf.integration.common.client.support.UniversalIdAuthenticator;
 import com.figaf.integration.common.client.support.parser.CloudFoundryOAuthTokenParser;
 import com.figaf.integration.common.client.support.parser.SamlRequestParser;
-import com.figaf.integration.common.client.support.payload.UniversalIdAuthContext;
+import com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext;
+import com.figaf.integration.common.client.support.universalId.UniversalIdAuthenticator;
 import com.figaf.integration.common.entity.*;
 import com.figaf.integration.common.exception.ClientIntegrationException;
 import com.figaf.integration.common.exception.UniversalIdAuthenticationException;

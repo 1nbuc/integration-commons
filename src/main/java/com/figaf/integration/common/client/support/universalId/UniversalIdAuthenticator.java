@@ -1,13 +1,16 @@
-package com.figaf.integration.common.client.support;
+package com.figaf.integration.common.client.support.universalId;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.figaf.integration.common.client.support.payload.UniversalIdAuthContext;
 import com.figaf.integration.common.entity.RequestContext;
 import com.figaf.integration.common.exception.UniversalIdAuthenticationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
@@ -19,12 +22,25 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import static java.lang.String.format;
+
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP10_URL_FORMAT;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP11_URL_FORMAT;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP12_URL;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP14_URL_FORMAT;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP15_URL_FORMAT;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP5_URL;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP6_URL;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP7_URL;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP8_URL_FORMAT;
+import static com.figaf.integration.common.client.support.universalId.UniversalIdAuthContext.STEP9_URL;
 
 @Slf4j
 public class UniversalIdAuthenticator {
@@ -286,12 +302,11 @@ public class UniversalIdAuthenticator {
 
     private void step5_fetchUniversalIdCookie(UniversalIdAuthContext context) throws UniversalIdAuthenticationException {
         log.debug("Step 5: Fetch Universal ID Cookie (POST to /uid-core/authenticate)");
-        String targetUrl = "https://core-api.account.sap.com/uid-core/authenticate";
         URI uri;
         try {
-            uri = new URI(targetUrl);
+            uri = new URI(STEP5_URL);
         } catch (URISyntaxException e) {
-            throw new UniversalIdAuthenticationException("Step 5: Invalid target URL: " + targetUrl, e);
+            throw new UniversalIdAuthenticationException("Step 5: Invalid target URL: " + STEP5_URL, e);
         }
 
         HttpHeaders customHeaders = new HttpHeaders();
@@ -314,7 +329,7 @@ public class UniversalIdAuthenticator {
         ResponseEntity<String> responseEntity;
 
         try {
-            log.debug("Step 5: Requesting {} with username {}", targetUrl, requestContext.getConnectionProperties().getUsername());
+            log.debug("Step 5: Requesting {} with username {}", STEP5_URL, requestContext.getConnectionProperties().getUsername());
             responseEntity = restTemplate.exchange(requestEntity, String.class);
             processResponseCookies(responseEntity, context, uri.getHost());
 
@@ -337,7 +352,7 @@ public class UniversalIdAuthenticator {
             } else {
                 throw new UniversalIdAuthenticationException("Step 5: Could not extract cookieName or cookieValue from response. Body: " + responseBody);
             }
-            context.setHeader("Referer", targetUrl);
+            context.setHeader("Referer", STEP5_URL);
 
         } catch (HttpStatusCodeException e) {
             throw new UniversalIdAuthenticationException("Step 5: Failed. Status: " + e.getStatusCode() + ", Body: " + e.getResponseBodyAsString(), e);
@@ -351,12 +366,11 @@ public class UniversalIdAuthenticator {
         if (context.getCdcApiKey() == null || context.getCdcLoginToken() == null) {
             throw new UniversalIdAuthenticationException("Step 6: UID cookieName or cookieValue is missing.");
         }
-        String targetUrl = "https://cdc-api.account.sap.com/accounts.getAccountInfo";
         URI uri;
         try {
-            uri = new URI(targetUrl);
+            uri = new URI(STEP6_URL);
         } catch (URISyntaxException e) {
-            throw new UniversalIdAuthenticationException("Step 6: Invalid target URL: " + targetUrl, e);
+            throw new UniversalIdAuthenticationException("Step 6: Invalid target URL: " + STEP6_URL, e);
         }
 
         HttpHeaders customHeaders = new HttpHeaders();
@@ -379,7 +393,7 @@ public class UniversalIdAuthenticator {
         ResponseEntity<String> responseEntity;
 
         try {
-            log.debug("Step 6: Requesting {}", targetUrl);
+            log.debug("Step 6: Requesting {}", STEP6_URL);
             responseEntity = restTemplate.exchange(requestEntity, String.class);
             processResponseCookies(responseEntity, context, uri.getHost());
 
@@ -395,7 +409,7 @@ public class UniversalIdAuthenticator {
             } else {
                 throw new UniversalIdAuthenticationException("Step 6: Could not extract UID from response. Body: " + responseBody);
             }
-            context.setHeader("Referer", targetUrl);
+            context.setHeader("Referer", STEP6_URL);
         } catch (HttpStatusCodeException e) {
             throw new UniversalIdAuthenticationException("Step 6: Failed. Status: " + e.getStatusCode() + ", Body: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
@@ -408,12 +422,11 @@ public class UniversalIdAuthenticator {
         if (context.getCdcApiKey() == null || context.getCdcLoginToken() == null) {
             throw new UniversalIdAuthenticationException("Step 7: UID cookieName or cookieValue is missing.");
         }
-        String targetUrl = "https://cdc-api.account.sap.com/accounts.getJWT";
         URI uri;
         try {
-            uri = new URI(targetUrl);
+            uri = new URI(STEP7_URL);
         } catch (URISyntaxException e) {
-            throw new UniversalIdAuthenticationException("Step 7: Invalid target URL: " + targetUrl, e);
+            throw new UniversalIdAuthenticationException("Step 7: Invalid target URL: " + STEP7_URL, e);
         }
 
         HttpHeaders customHeaders = new HttpHeaders();
@@ -435,7 +448,7 @@ public class UniversalIdAuthenticator {
         ResponseEntity<String> responseEntity;
 
         try {
-            log.debug("Step 7: Requesting {}", targetUrl);
+            log.debug("Step 7: Requesting {}", STEP7_URL);
             responseEntity = restTemplate.exchange(requestEntity, String.class);
             processResponseCookies(responseEntity, context, uri.getHost());
 
@@ -451,7 +464,7 @@ public class UniversalIdAuthenticator {
             } else {
                 throw new UniversalIdAuthenticationException("Step 7: Could not extract id_token from response. Body: " + responseBody);
             }
-            context.setHeader("Referer", targetUrl);
+            context.setHeader("Referer", STEP7_URL);
         } catch (HttpStatusCodeException e) {
             throw new UniversalIdAuthenticationException("Step 7: Failed. Status: " + e.getStatusCode() + ", Body: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
@@ -466,7 +479,7 @@ public class UniversalIdAuthenticator {
             return;
         }
 
-        String targetUrl = "https://core-api.account.sap.com/uid-core/accounts/" + context.getAccountId() + "/selectedAccount";
+        String targetUrl = format(STEP8_URL_FORMAT, context.getAccountId());
         URI uri;
         try {
             uri = new URI(targetUrl);
@@ -499,12 +512,11 @@ public class UniversalIdAuthenticator {
         if (context.getJwtIdToken() == null) {
             throw new UniversalIdAuthenticationException("Step 9: JWT (id_token) is missing.");
         }
-        String targetUrl = "https://core-api.account.sap.com/uid-core/refreshCDCLoginToken";
         URI uri;
         try {
-            uri = new URI(targetUrl);
+            uri = new URI(STEP9_URL);
         } catch (URISyntaxException e) {
-            throw new UniversalIdAuthenticationException("Step 9: Invalid target URL: " + targetUrl, e);
+            throw new UniversalIdAuthenticationException("Step 9: Invalid target URL: " + STEP9_URL, e);
         }
 
         HttpHeaders customHeaders = new HttpHeaders();
@@ -516,7 +528,7 @@ public class UniversalIdAuthenticator {
         ResponseEntity<String> responseEntity;
 
         try {
-            log.debug("Step 9: Requesting {}", targetUrl);
+            log.debug("Step 9: Requesting {}", STEP9_URL);
             responseEntity = restTemplate.exchange(requestEntity, String.class);
             processResponseCookies(responseEntity, context, uri.getHost());
 
@@ -535,7 +547,7 @@ public class UniversalIdAuthenticator {
             } else {
                 throw new UniversalIdAuthenticationException("Step 9: Could not extract CDC PreAuth cookieName or cookieValue. Body: " + responseBody);
             }
-            context.setHeader("Referer", targetUrl);
+            context.setHeader("Referer", STEP9_URL);
         } catch (HttpStatusCodeException e) {
             throw new UniversalIdAuthenticationException("Step 9: Failed. Status: " + e.getStatusCode() + ", Body: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
@@ -550,7 +562,7 @@ public class UniversalIdAuthenticator {
         }
 
         String apiKey = context.getCdcApiKey();
-        String simplifiedPageUrl = "https://account.sap.com/core/SAMLProxyPage.html%3FapiKey%3D" + apiKey;
+        String simplifiedPageUrl = format(STEP10_URL_FORMAT, apiKey);
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl("https://cdc-api.account.sap.com/accounts.webSdkBootstrap")
             .queryParam("apiKey", apiKey)
@@ -599,7 +611,7 @@ public class UniversalIdAuthenticator {
             throw new UniversalIdAuthenticationException("Step 11: CDC PreAuthCookieValue or UID CookieName (APIKey) is missing.");
         }
 
-        String simplifiedPageUrl = "https://account.sap.com/core/SAMLProxyPage.html%3FapiKey%3D" + context.getCdcApiKey();
+        String simplifiedPageUrl = format(STEP11_URL_FORMAT, context.getCdcApiKey());
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl("https://cdc-api.account.sap.com/socialize.notifyLogin")
             .queryParam("sessionExpiration", "2419200")
@@ -656,12 +668,11 @@ public class UniversalIdAuthenticator {
         if (context.getJwtIdToken() == null || context.getInitialXsrfHostCookieValue() == null || context.getSamlRelayStateValue() == null) {
             throw new UniversalIdAuthenticationException("Step 12: JWT, InitialXsrfHostCookie, or SamlRelayState (from step 3) is missing.");
         }
-        String targetUrl = "https://accounts.sap.com/oauth2/authorize";
         URI uri;
         try {
-            uri = new URI(targetUrl);
+            uri = new URI(STEP12_URL);
         } catch (URISyntaxException e) {
-            throw new UniversalIdAuthenticationException("Step 12: Invalid target URL: " + targetUrl, e);
+            throw new UniversalIdAuthenticationException("Step 12: Invalid target URL: " + STEP12_URL, e);
         }
 
         HttpHeaders customHeaders = new HttpHeaders();
@@ -690,7 +701,7 @@ public class UniversalIdAuthenticator {
         ResponseEntity<String> responseEntity;
 
         try {
-            log.debug("Step 12: Requesting {}", targetUrl);
+            log.debug("Step 12: Requesting {}", STEP12_URL);
             responseEntity = restTemplate.exchange(requestEntity, String.class);
             processResponseCookies(responseEntity, context, uri.getHost());
 
@@ -724,7 +735,7 @@ public class UniversalIdAuthenticator {
                 throw new UniversalIdAuthenticationException("Step 12: Could not extract SAMLRequest from form.");
             }
             log.debug("Step 12: SAMLRequest extracted.");
-            context.setHeader("Referer", targetUrl);
+            context.setHeader("Referer", STEP12_URL);
 
         } catch (HttpStatusCodeException e) {
             throw new UniversalIdAuthenticationException("Step 12: Failed. Status: " + e.getStatusCode() + ", Body: " + e.getResponseBodyAsString(), e);
@@ -738,7 +749,7 @@ public class UniversalIdAuthenticator {
         if (context.getCdcApiKey() == null) {
             throw new UniversalIdAuthenticationException("Step 13: UID CookieName (APIKey) is missing for Gigya JS URL.");
         }
-        String targetUrl = "https://cdc-api.account.sap.com/js/gigya.js?apiKey=" + context.getCdcApiKey();
+        String targetUrl = format(STEP15_URL_FORMAT, context.getCdcApiKey());
         URI uri;
         try {
             uri = new URI(targetUrl);
@@ -841,7 +852,7 @@ public class UniversalIdAuthenticator {
     private void step14_getSamlResponseFormViaGigyaContinue(UniversalIdAuthContext context) throws UniversalIdAuthenticationException {
         log.debug("Step 14: Get SAML Response Form via Gigya Continue");
 
-        String targetUrl = "https://cdc-api.account.sap.com/saml/v2.0/" + context.getCdcApiKey() + "/idp/sso/continue";
+        String targetUrl = format(STEP14_URL_FORMAT, context.getCdcApiKey());
 
 
         UriComponentsBuilder urlWithParams = UriComponentsBuilder.fromHttpUrl(targetUrl);
